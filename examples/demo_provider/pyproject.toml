@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "demo-ma-provider"
+version = "0.1.0"
+description = "Demo community provider for music-assistant-plugin-manager"
+requires-python = ">=3.11"
+dependencies = ["music-assistant-plugin-manager"]
+
+[project.entry-points."music_assistant.provider"]
+demo_community_provider = "demo_ma_provider"
+
+[tool.setuptools.packages.find]
+include = ["demo_ma_provider*"]
+
+[tool.setuptools.package-data]
+demo_ma_provider = ["manifest.json"]

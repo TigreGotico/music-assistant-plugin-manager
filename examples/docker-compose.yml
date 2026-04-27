@@ -1,0 +1,34 @@
+services:
+  music-assistant-server:
+    # Override the upstream image with a thin wrapper that installs community plugins
+    # at image build time, then launches MA via the mapm wrapper.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # If you want to keep pull_policy: always, use the pre-built community image instead:
+    #   image: ghcr.io/openvoiceos/music-assistant-community:beta
+    container_name: music-assistant-server
+    restart: always
+    user: ${MAIN_GID}:${MAIN_UID}
+    network_mode: host
+    ports:
+      - 5353:5353
+      - 44148:44148
+      - 8927:8927
+      - 8095:8095
+      - 8097:8097
+    volumes:
+      - ${DATA_BASE_DIR}/music-assistant:/data/
+      - /media/hdd16/Library/music:/music
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      LOG_LEVEL: info
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 5G

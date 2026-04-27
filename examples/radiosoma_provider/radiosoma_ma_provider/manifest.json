@@ -1,0 +1,11 @@
+{
+  "type": "music",
+  "domain": "radiosoma",
+  "name": "SomaFM",
+  "description": "Curated, ad-free internet radio from SomaFM — 40+ eclectic channels.",
+  "codeowners": ["@TigreGotico"],
+  "stage": "beta",
+  "requirements": [],
+  "documentation": "https://github.com/TigreGotico/music-assistant-plugin-manager",
+  "multi_instance": false
+}

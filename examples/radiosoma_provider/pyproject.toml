@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radiosoma-ma-provider"
+version = "0.1.0"
+description = "SomaFM provider for Music Assistant via radiosoma"
+requires-python = ">=3.11"
+dependencies = [
+    "music-assistant-plugin-manager",
+]
+
+[project.entry-points."music_assistant.provider"]
+radiosoma = "radiosoma_ma_provider"
+
+[tool.setuptools.packages.find]
+include = ["radiosoma_ma_provider*"]
+
+[tool.setuptools.package-data]
+radiosoma_ma_provider = ["manifest.json"]

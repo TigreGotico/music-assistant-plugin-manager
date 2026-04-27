@@ -1,0 +1,9 @@
+{
+  "type": "music",
+  "domain": "demo_community_provider",
+  "name": "Demo Community Provider",
+  "description": "Example provider installed via music-assistant-plugin-manager.",
+  "codeowners": ["@community"],
+  "requirements": [],
+  "documentation": "https://github.com/TigreGotico/music-assistant-plugin-manager"
+}
