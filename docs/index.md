@@ -1,16 +1,16 @@
 # music-assistant-plugin-manager
 
-Entrypoint-based provider discovery for [Music Assistant](https://music-assistant.io) — install providers as plain pip packages.
+Entrypoint-based provider discovery for [Music Assistant](https://music-assistant.io). Install providers as plain pip packages.
 
 ## Overview
 
-Music Assistant requires all providers to live inside `music_assistant/providers/`. This library patches MA's discovery at process start so that any package registered under the `music_assistant.provider` entrypoint group is found and loaded without modifying MA source or rebuilding its Docker image.
+Music Assistant requires all providers to live inside `music_assistant/providers/`. This library patches MA's discovery at process start. Any package registered under the `music_assistant.provider` entrypoint group is found and loaded, with no change to MA source and no Docker image rebuild.
 
 ## Key modules
 
 | Module | Key symbol | Purpose | Source |
 |---|---|---|---|
-| `bootstrap` | `install()` | Applies both patches; idempotent | `music_assistant_plugin_manager/bootstrap.py:21` |
+| `bootstrap` | `install()` | Applies both patches (idempotent) | `music_assistant_plugin_manager/bootstrap.py:21` |
 | `finder` | `MassProviderFinder` | `importlib` meta-path hook | `music_assistant_plugin_manager/finder.py:14` |
 | `entrypoints` | `scan_entrypoints()` | Reads `music_assistant.provider` entrypoint group | `music_assistant_plugin_manager/entrypoints.py:10` |
 | `manifest` | `load_manifest_json()` | Loads `manifest.json` from a plugin package | `music_assistant_plugin_manager/manifest.py:11` |

@@ -34,8 +34,8 @@ include = ["my_provider_module*"]
 my_provider_module = ["manifest.json"]
 ```
 
-- `my_provider_domain` — the MA domain string. Must be unique across all installed providers. Use snake_case.
-- `my_provider_module` — the importable module name (top-level package or module on `sys.path`).
+- `my_provider_domain`: the MA domain string. It must be unique across all installed providers. Use snake_case.
+- `my_provider_module`: the importable module name (top-level package or module on `sys.path`).
 
 ## manifest.json fields
 
@@ -160,13 +160,13 @@ Source: `examples/radiosoma_provider/radiosoma_ma_provider/__init__.py`
 
 `SomaFMProvider` subclasses `MusicProvider` and declares `SUPPORTED_FEATURES = {ProviderFeature.SEARCH, ProviderFeature.BROWSE}`.
 
-**Startup** — `handle_async_init` fetches `http://api.somafm.com/channels.xml` using `self.mass.http_session` (MA's shared aiohttp session), parses it with `xml.etree.ElementTree`, and populates `self._stations`. No third-party dependencies are needed.
+**Startup**: `handle_async_init` fetches `http://api.somafm.com/channels.xml` using `self.mass.http_session` (MA's shared aiohttp session), parses it with `xml.etree.ElementTree`, and populates `self._stations`. No third-party dependencies are needed.
 
-**Browse** — `browse(path)` returns genre folders at the top level, then radio items filtered by genre when a folder is entered. Paths use the form `<domain>://<genre>`.
+**Browse**: `browse(path)` returns genre folders at the top level, then radio items filtered by genre when a folder is entered. Paths use the form `<domain>://<genre>`.
 
-**Search** — `search(query, media_types, limit)` does a case-insensitive substring match on station title and genre. Results are cached for 24 hours via MA's `@use_cache(3600 * 24)` decorator.
+**Search**: `search(query, media_types, limit)` does a case-insensitive substring match on station title and genre. Results are cached for 24 hours via MA's `@use_cache(3600 * 24)` decorator.
 
-**Streaming** — `get_stream_details(item_id, media_type)` fetches the station's PLS playlist, extracts the first `File1=` URL, and returns a `StreamDetails` with `stream_type=StreamType.HTTP`, `content_type=ContentType.MP3`, and `can_seek=False`.
+**Streaming**: `get_stream_details(item_id, media_type)` fetches the station's PLS playlist, extracts the first `File1=` URL, and returns a `StreamDetails` with `stream_type=StreamType.HTTP`, `content_type=ContentType.MP3`, and `can_seek=False`.
 
 **Manifest** (`examples/radiosoma_provider/radiosoma_ma_provider/manifest.json`):
 
@@ -175,7 +175,7 @@ Source: `examples/radiosoma_provider/radiosoma_ma_provider/__init__.py`
   "type": "music",
   "domain": "radiosoma",
   "name": "SomaFM",
-  "description": "Curated, ad-free internet radio from SomaFM — 40+ eclectic channels.",
+  "description": "Curated, ad-free internet radio from SomaFM, 40+ eclectic channels.",
   "codeowners": ["@TigreGotico"],
   "stage": "beta",
   "requirements": [],
@@ -183,4 +183,7 @@ Source: `examples/radiosoma_provider/radiosoma_ma_provider/__init__.py`
 }
 ```
 
-No `requirements` — the provider uses only MA's built-in aiohttp session and the Python standard library.
+No `requirements` are declared. The provider uses only MA's built-in aiohttp session and the Python standard library.
+
+---
+[← Architecture](architecture.md) · [Home](index.md) · [Deployment →](deployment.md)
