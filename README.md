@@ -1,6 +1,6 @@
 # music-assistant-plugin-manager
 
-Ship a [Music Assistant](https://music-assistant.io) provider as a standalone pip package — no PR to the MA core repository required.
+Ship a [Music Assistant](https://music-assistant.io) provider as a standalone pip package. No PR to the MA core repository is required.
 
 MA requires all providers to live inside the server's `music_assistant/providers/` directory. This library patches MA's provider discovery at runtime so that any pip-installable package registered under the `music_assistant.provider` entrypoint group is automatically found and loaded.
 
@@ -8,10 +8,10 @@ MA requires all providers to live inside the server's `music_assistant/providers
 
 Two patches are applied before MA starts:
 
-1. **Import hook** (`MassProviderFinder`) — intercepts `music_assistant.providers.<domain>` imports and transparently redirects them to the real plugin module.
-2. **Manifest patch** — monkey-patches `MusicAssistant.__load_provider_manifests` to also inject `manifest.json` files from entrypoint-registered packages.
+1. **Import hook** (`MassProviderFinder`): intercepts `music_assistant.providers.<domain>` imports and redirects them to the real plugin module.
+2. **Manifest patch**: patches `MusicAssistant.__load_provider_manifests` to also inject `manifest.json` files from entrypoint-registered packages.
 
-Both patches are applied by a **wrapper launcher**. Users run `python -m music_assistant_plugin_manager` (or the `music-assistant-community` script) instead of the normal MA entry point. No `.pth` files, no edits to MA source.
+A **wrapper launcher** applies both patches. Users run `python -m music_assistant_plugin_manager` (or the `music-assistant-community` script) instead of the normal MA entry point. This needs no `.pth` files and no edits to MA source.
 
 ## Install
 
@@ -95,7 +95,7 @@ See [docs/plugin-authors.md](docs/plugin-authors.md) for the full guide, manifes
 
 | Example | What it shows |
 |---|---|
-| `examples/demo_provider/` | Minimal scaffold — no real functionality |
+| `examples/demo_provider/` | Minimal scaffold with no real functionality |
 | `examples/radiosoma_provider/` | Full `MusicProvider` subclass: SomaFM internet radio via stdlib XML + aiohttp, `SEARCH` and `BROWSE` features |
 
 ## License

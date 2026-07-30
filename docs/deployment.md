@@ -105,3 +105,6 @@ services:
 `DATA_BASE_DIR` is the host path under which MA will store its database and configuration.
 
 `network_mode: host` is required for mDNS discovery (port 5353). The explicit `ports:` list is informational when `network_mode: host` is active but useful as documentation of which ports MA uses.
+
+---
+[← Plugin author guide](plugin-authors.md) · [Home](index.md)
