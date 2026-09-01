@@ -47,6 +47,14 @@ RUN /app/venv/bin/uv pip install --prerelease=allow \
     /build/music-assistant-plugin-manager \
     /build/music-assistant-plugin-manager/examples/radiosoma_provider
 
+RUN printf '%s\n' \
+ '#!/bin/sh' \
+ 'for path in /usr/lib/*/libjemalloc.so.2; do' \
+ '  [ -f "$path" ] && export LD_PRELOAD="$path" MALLOC_CONF="background_thread:true,dirty_decay_ms:5000,muzzy_decay_ms:5000" && break' \
+ 'done' \
+ 'exec /app/venv/bin/python -m music_assistant_plugin_manager "$@"' \
+ > /usr/local/bin/community-entrypoint.sh && chmod +x /usr/local/bin/community-entrypoint.sh
+
 ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
 
