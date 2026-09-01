@@ -43,18 +43,25 @@ The example at `examples/Dockerfile` installs packages from a local source tree:
 FROM ghcr.io/music-assistant/server:beta
 
 COPY . /build/
-RUN /app/venv/bin/uv pip install \
-    /build/plugin-manager \
-    /build/plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow \
+    /build/music-assistant-plugin-manager \
+    /build/music-assistant-plugin-manager/examples/radiosoma_provider
 
-ENTRYPOINT ["python", "-m", "music_assistant_plugin_manager"]
+ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
+
+The build context is the directory that holds the checkouts, so `COPY . /build/`
+puts each repository under its own name. The entrypoint script is written by the
+`RUN` layer in `examples/Dockerfile`: overriding the base image's `ENTRYPOINT`
+drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without
+them MA stores its database inside the container and loses every setting on
+restart.
 
 Key points:
 
-- `COPY . /build/` places the repo root (which contains the `plugin-manager/` subdirectory) into the image.
+- `COPY . /build/` places the build context — the directory holding the checkouts — into the image.
 - The `RUN` layer installs the manager library and the example provider in a single `uv pip install` call.
-- `ENTRYPOINT` overrides MA's default entry point. `CMD` from the base image is preserved and passed through.
+- The base image has no `CMD`; its `ENTRYPOINT` is `entrypoint.sh --data-dir /data --cache-dir /data/.cache`. Overriding `ENTRYPOINT` therefore replaces those arguments rather than adding to them, so the replacement must pass them itself.
 
 To install published packages instead of local source, replace the paths with package names:
 
@@ -76,7 +83,7 @@ services:
       dockerfile: Dockerfile
     container_name: music-assistant-server
     restart: always
-    user: ${MAIN_GID}:${MAIN_UID}
+    user: ${MAIN_UID}:${MAIN_GID}
     network_mode: host
     ports:
       - 5353:5353
@@ -100,7 +107,7 @@ services:
           memory: 5G
 ```
 
-`MAIN_GID` and `MAIN_UID` should be set in a `.env` file or exported in the shell before running `docker compose up`.
+`MAIN_UID` and `MAIN_GID` should be set in a `.env` file or exported in the shell before running `docker compose up`.
 
 `DATA_BASE_DIR` is the host path under which MA will store its database and configuration.
 
