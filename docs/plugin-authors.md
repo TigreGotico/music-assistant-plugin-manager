@@ -115,22 +115,31 @@ async def setup(
     return MyProvider(mass, manifest, config, SUPPORTED_FEATURES)
 ```
 
-### `async def get_config_entries(mass, instance_id, action, values) -> tuple[ConfigEntry, ...]`
+### Collecting configuration
 
-Returns configuration fields shown in the MA UI when a user adds an instance of the provider. Return an empty tuple if no configuration is needed.
+Configuration is split in two. One-time setup input — host, credentials, pairing —
+is collected by a `setup_flow` module next to the provider, and read back with
+`self.get_setup_value(key)`. Options a user may change later live on the provider
+instance itself, in `async def get_config_entries(self)`.
 
 ```python
-from music_assistant_models.config_entries import ConfigEntry, ConfigValueType
-from music_assistant.mass import MusicAssistant
+# my_provider/setup_flow.py
+from music_assistant_models.config_entries import ConfigEntry
+from music_assistant_models.enums import ConfigEntryType
 
-async def get_config_entries(
-    mass: MusicAssistant,
-    instance_id: str | None = None,
-    action: str | None = None,
-    values: dict[str, ConfigValueType] | None = None,
-) -> tuple[ConfigEntry, ...]:
-    return ()
+
+async def run_setup(session) -> None:
+    values = await session.form(
+        [ConfigEntry(key="host", type=ConfigEntryType.STRING, label="Host", required=True)],
+        last_step=True,
+    )
+    await session.finish(values)
 ```
+
+A provider with no setup module is created immediately, without a form, and can
+only be configured through its options. Declaring a required entry in
+`get_config_entries` without a setup flow to fill it makes the provider
+unloadable: nothing will ever supply the value.
 
 ## Provider types and base classes
 

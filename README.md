@@ -43,12 +43,19 @@ The recommended way to run community providers in a container is to extend the o
 FROM ghcr.io/music-assistant/server:beta
 
 COPY . /build/
-RUN /app/venv/bin/uv pip install \
-    /build/plugin-manager \
-    /build/plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow \
+    /build/music-assistant-plugin-manager \
+    /build/music-assistant-plugin-manager/examples/radiosoma_provider
 
-ENTRYPOINT ["python", "-m", "music_assistant_plugin_manager"]
+ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
+
+The build context is the directory that holds the checkouts, so `COPY . /build/`
+puts each repository under its own name. The entrypoint script is written by the
+`RUN` layer in `examples/Dockerfile`: overriding the base image's `ENTRYPOINT`
+drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without
+them MA stores its database inside the container and loses every setting on
+restart.
 
 Note: the MA server image ships only `uv` inside the venv, not `pip`. Use `/app/venv/bin/uv pip install`.
 
@@ -86,7 +93,7 @@ Your module must contain:
 |---|---|---|
 | `manifest.json` | file | MA provider manifest (domain, name, type, …) |
 | `setup` | `async def` | Instantiates and returns the provider |
-| `get_config_entries` | `async def` | Returns a tuple of `ConfigEntry` objects |
+| `setup_flow.py` | module | Optional. Collects one-time setup input (`async def run_setup(session)`) |
 | `SUPPORTED_FEATURES` | `set[ProviderFeature]` | Feature flags the provider advertises |
 
 See [docs/plugin-authors.md](docs/plugin-authors.md) for the full guide, manifest field reference, and a worked example.
