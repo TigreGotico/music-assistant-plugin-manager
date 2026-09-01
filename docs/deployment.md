@@ -83,7 +83,7 @@ services:
       dockerfile: Dockerfile
     container_name: music-assistant-server
     restart: always
-    user: ${MAIN_GID}:${MAIN_UID}
+    user: ${MAIN_UID}:${MAIN_GID}
     network_mode: host
     ports:
       - 5353:5353
