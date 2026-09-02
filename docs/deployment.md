@@ -37,15 +37,16 @@ The official MA server image is `ghcr.io/music-assistant/server:beta`. It ships 
 
 ### Dockerfile
 
-The example at `examples/Dockerfile` installs packages from a local source tree:
+The example at `examples/Dockerfile` installs the manager from PyPI and optionally includes plugins from a local source tree:
 
 ```dockerfile
 FROM ghcr.io/music-assistant/server:beta
 
-COPY . /build/
-RUN /app/venv/bin/uv pip install --prerelease=allow \
-    /build/music-assistant-plugin-manager \
-    /build/music-assistant-plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow music-assistant-plugin-manager
+
+# For developing plugins, copy them into the image and install from the local checkout.
+COPY ./examples/radiosoma_provider /build/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/radiosoma_provider
 
 RUN printf '%s\n' \
  '#!/bin/sh' \
@@ -58,25 +59,32 @@ RUN printf '%s\n' \
 ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
 
-The build context is the directory that holds the checkouts, so `COPY . /build/`
-puts each repository under its own name. The entrypoint script is written by the
-`RUN` layer in `examples/Dockerfile`: overriding the base image's `ENTRYPOINT`
-drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without
-them MA stores its database inside the container and loses every setting on
-restart.
+The entrypoint script is written by the `RUN` layer: overriding the base image's `ENTRYPOINT` drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without them MA stores its database inside the container and loses every setting on restart.
 
 Key points:
 
-- `COPY . /build/` places the build context — the directory holding the checkouts — into the image.
-- The `RUN` layer installs the manager library and the example provider in a single `uv pip install` call.
+- The manager library and published plugins are installed from PyPI.
+- For plugins under development, use `COPY` to include a local checkout and install it with `uv pip install /path`.
 - The base image has no `CMD`; its `ENTRYPOINT` is `entrypoint.sh --data-dir /data --cache-dir /data/.cache`. Overriding `ENTRYPOINT` therefore replaces those arguments rather than adding to them, so the replacement must pass them itself.
 
-To install published packages instead of local source, replace the paths with package names:
+#### Installing published plugins
+
+To install published plugins from PyPI, add them to the `RUN` command:
 
 ```dockerfile
-RUN /app/venv/bin/uv pip install \
+RUN /app/venv/bin/uv pip install --prerelease=allow \
     music-assistant-plugin-manager \
-    my-ma-provider==1.2.3
+    my-ma-provider==1.2.3 \
+    another-provider
+```
+
+#### Installing unpublished plugins
+
+The MA server base image ships no `git`, so `pip install git+https://...` fails inside the container. Install unpublished plugins by copying the local checkout:
+
+```dockerfile
+COPY ./my-plugin /build/my-plugin
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/my-plugin
 ```
 
 ### docker-compose
