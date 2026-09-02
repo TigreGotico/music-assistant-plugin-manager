@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1a3](https://github.com/TigreGotico/music-assistant-plugin-manager/tree/0.1.1a3) (2026-09-02)
+
+[Full Changelog](https://github.com/TigreGotico/music-assistant-plugin-manager/compare/0.1.1a2...0.1.1a3)
+
+**Merged pull requests:**
+
+- docs: use PyPI for manager, local checkouts for plugins [\#6](https://github.com/TigreGotico/music-assistant-plugin-manager/pull/6) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.1.1a2](https://github.com/TigreGotico/music-assistant-plugin-manager/tree/0.1.1a2) (2026-09-01)
+
+[Full Changelog](https://github.com/TigreGotico/music-assistant-plugin-manager/compare/0.1.1a1...0.1.1a2)
+
 ## [0.1.1a1](https://github.com/TigreGotico/music-assistant-plugin-manager/tree/0.1.1a1) (2026-09-01)
 
 [Full Changelog](https://github.com/TigreGotico/music-assistant-plugin-manager/compare/88cffed42cea20be961fa5b9539c1fb5a088b395...0.1.1a1)
