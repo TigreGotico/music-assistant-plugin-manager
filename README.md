@@ -42,10 +42,11 @@ The recommended way to run community providers in a container is to extend the o
 ```dockerfile
 FROM ghcr.io/music-assistant/server:beta
 
-COPY . /build/
-RUN /app/venv/bin/uv pip install --prerelease=allow \
-    /build/music-assistant-plugin-manager \
-    /build/music-assistant-plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow music-assistant-plugin-manager
+
+# For developing plugins, copy them into the image and install from the local checkout.
+COPY ./examples/radiosoma_provider /build/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/radiosoma_provider
 
 RUN printf '%s\n' \
  '#!/bin/sh' \
@@ -58,12 +59,7 @@ RUN printf '%s\n' \
 ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
 
-The build context is the directory that holds the checkouts, so `COPY . /build/`
-puts each repository under its own name. The entrypoint script is written by the
-`RUN` layer in `examples/Dockerfile`: overriding the base image's `ENTRYPOINT`
-drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without
-them MA stores its database inside the container and loses every setting on
-restart.
+The entrypoint script is written by the `RUN` layer: overriding the base image's `ENTRYPOINT` drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without them MA stores its database inside the container and loses every setting on restart.
 
 Note: the MA server image ships only `uv` inside the venv, not `pip`. Use `/app/venv/bin/uv pip install`.
 

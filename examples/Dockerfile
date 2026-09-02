@@ -2,10 +2,11 @@ FROM ghcr.io/music-assistant/server:beta
 
 # The MA image ships uv, not pip, and MA lives in /app/venv — a bare `pip install`
 # would land in a different interpreter.
-COPY . /build/
-RUN /app/venv/bin/uv pip install --prerelease=allow \
-    /build/music-assistant-plugin-manager \
-    /build/music-assistant-plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow music-assistant-plugin-manager
+
+# For developing plugins, copy them into the image and install from the local checkout.
+COPY ./examples/radiosoma_provider /build/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/radiosoma_provider
 
 # The base image's entrypoint passes --data-dir/--cache-dir to `mass` and preloads
 # jemalloc; overriding ENTRYPOINT drops both, so the wrapper has to carry them or
