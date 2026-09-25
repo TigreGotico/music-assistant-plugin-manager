@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1a4](https://github.com/TigreGotico/music-assistant-plugin-manager/tree/0.1.1a4) (2026-09-25)
+
+[Full Changelog](https://github.com/TigreGotico/music-assistant-plugin-manager/compare/0.1.1a3...0.1.1a4)
+
+**Merged pull requests:**
+
+- chore: Configure Renovate [\#1](https://github.com/TigreGotico/music-assistant-plugin-manager/pull/1) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [0.1.1a3](https://github.com/TigreGotico/music-assistant-plugin-manager/tree/0.1.1a3) (2026-09-02)
 
 [Full Changelog](https://github.com/TigreGotico/music-assistant-plugin-manager/compare/0.1.1a2...0.1.1a3)
