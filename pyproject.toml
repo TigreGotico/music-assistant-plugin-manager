@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "music-assistant-plugin-manager"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Entrypoint-based plugin discovery for Music Assistant — install providers as plain pip packages"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -19,6 +19,9 @@ Repository = "https://github.com/TigreGotico/music-assistant-plugin-manager"
 
 [tool.setuptools.packages.find]
 include = ["music_assistant_plugin_manager*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "music_assistant_plugin_manager.version.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

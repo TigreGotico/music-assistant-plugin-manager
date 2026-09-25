@@ -37,36 +37,59 @@ The official MA server image is `ghcr.io/music-assistant/server:beta`. It ships 
 
 ### Dockerfile
 
-The example at `examples/Dockerfile` installs packages from a local source tree:
+The example at `examples/Dockerfile` installs the manager from PyPI and optionally includes plugins from a local source tree:
 
 ```dockerfile
 FROM ghcr.io/music-assistant/server:beta
 
-COPY . /build/
-RUN /app/venv/bin/uv pip install \
-    /build/plugin-manager \
-    /build/plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow music-assistant-plugin-manager
 
-ENTRYPOINT ["python", "-m", "music_assistant_plugin_manager"]
+# For developing plugins, copy them into the image and install from the local checkout.
+COPY ./examples/radiosoma_provider /build/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/radiosoma_provider
+
+RUN printf '%s\n' \
+ '#!/bin/sh' \
+ 'for path in /usr/lib/*/libjemalloc.so.2; do' \
+ '  [ -f "$path" ] && export LD_PRELOAD="$path" MALLOC_CONF="background_thread:true,dirty_decay_ms:5000,muzzy_decay_ms:5000" && break' \
+ 'done' \
+ 'exec /app/venv/bin/python -m music_assistant_plugin_manager "$@"' \
+ > /usr/local/bin/community-entrypoint.sh && chmod +x /usr/local/bin/community-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
+
+The entrypoint script is written by the `RUN` layer: overriding the base image's `ENTRYPOINT` drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without them MA stores its database inside the container and loses every setting on restart.
 
 Key points:
 
-- `COPY . /build/` places the repo root (which contains the `plugin-manager/` subdirectory) into the image.
-- The `RUN` layer installs the manager library and the example provider in a single `uv pip install` call.
-- `ENTRYPOINT` overrides MA's default entry point. `CMD` from the base image is preserved and passed through.
+- The manager library and published plugins are installed from PyPI.
+- For plugins under development, use `COPY` to include a local checkout and install it with `uv pip install /path`.
+- The base image has no `CMD`; its `ENTRYPOINT` is `entrypoint.sh --data-dir /data --cache-dir /data/.cache`. Overriding `ENTRYPOINT` therefore replaces those arguments rather than adding to them, so the replacement must pass them itself.
 
-To install published packages instead of local source, replace the paths with package names:
+#### Installing published plugins
+
+To install published plugins from PyPI, add them to the `RUN` command:
 
 ```dockerfile
-RUN /app/venv/bin/uv pip install \
+RUN /app/venv/bin/uv pip install --prerelease=allow \
     music-assistant-plugin-manager \
-    my-ma-provider==1.2.3
+    my-ma-provider==1.2.3 \
+    another-provider
+```
+
+#### Installing unpublished plugins
+
+The MA server base image ships no `git`, so `pip install git+https://...` fails inside the container. Install unpublished plugins by copying the local checkout:
+
+```dockerfile
+COPY ./my-plugin /build/my-plugin
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/my-plugin
 ```
 
 ### docker-compose
 
-Full working snippet matching the example at `examples/docker-compose.yml`:
+Working snippet (the example at `examples/docker-compose.yml` additionally mounts a host music directory):
 
 ```yaml
 services:
@@ -76,7 +99,7 @@ services:
       dockerfile: Dockerfile
     container_name: music-assistant-server
     restart: always
-    user: ${MAIN_GID}:${MAIN_UID}
+    user: ${MAIN_UID}:${MAIN_GID}
     network_mode: host
     ports:
       - 5353:5353
@@ -100,8 +123,11 @@ services:
           memory: 5G
 ```
 
-`MAIN_GID` and `MAIN_UID` should be set in a `.env` file or exported in the shell before running `docker compose up`.
+`MAIN_UID` and `MAIN_GID` should be set in a `.env` file or exported in the shell before running `docker compose up`.
 
 `DATA_BASE_DIR` is the host path under which MA will store its database and configuration.
 
 `network_mode: host` is required for mDNS discovery (port 5353). The explicit `ports:` list is informational when `network_mode: host` is active but useful as documentation of which ports MA uses.
+
+---
+[← Plugin author guide](plugin-authors.md) · [Home](index.md)

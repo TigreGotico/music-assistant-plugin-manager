@@ -1,6 +1,6 @@
 # music-assistant-plugin-manager
 
-Ship a [Music Assistant](https://music-assistant.io) provider as a standalone pip package — no PR to the MA core repository required.
+Ship a [Music Assistant](https://music-assistant.io) provider as a standalone pip package. No PR to the MA core repository is required.
 
 MA requires all providers to live inside the server's `music_assistant/providers/` directory. This library patches MA's provider discovery at runtime so that any pip-installable package registered under the `music_assistant.provider` entrypoint group is automatically found and loaded.
 
@@ -8,10 +8,10 @@ MA requires all providers to live inside the server's `music_assistant/providers
 
 Two patches are applied before MA starts:
 
-1. **Import hook** (`MassProviderFinder`) — intercepts `music_assistant.providers.<domain>` imports and transparently redirects them to the real plugin module.
-2. **Manifest patch** — monkey-patches `MusicAssistant.__load_provider_manifests` to also inject `manifest.json` files from entrypoint-registered packages.
+1. **Import hook** (`MassProviderFinder`): intercepts `music_assistant.providers.<domain>` imports and redirects them to the real plugin module.
+2. **Manifest patch**: patches `MusicAssistant.__load_provider_manifests` to also inject `manifest.json` files from entrypoint-registered packages.
 
-Both patches are applied by a **wrapper launcher**. Users run `python -m music_assistant_plugin_manager` (or the `music-assistant-community` script) instead of the normal MA entry point. No `.pth` files, no edits to MA source.
+A **wrapper launcher** applies both patches. Users run `python -m music_assistant_plugin_manager` (or the `music-assistant-community` script) instead of the normal MA entry point. This needs no `.pth` files and no edits to MA source.
 
 ## Install
 
@@ -42,13 +42,24 @@ The recommended way to run community providers in a container is to extend the o
 ```dockerfile
 FROM ghcr.io/music-assistant/server:beta
 
-COPY . /build/
-RUN /app/venv/bin/uv pip install \
-    /build/plugin-manager \
-    /build/plugin-manager/examples/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow music-assistant-plugin-manager
 
-ENTRYPOINT ["python", "-m", "music_assistant_plugin_manager"]
+# For developing plugins, copy them into the image and install from the local checkout.
+COPY ./examples/radiosoma_provider /build/radiosoma_provider
+RUN /app/venv/bin/uv pip install --prerelease=allow /build/radiosoma_provider
+
+RUN printf '%s\n' \
+ '#!/bin/sh' \
+ 'for path in /usr/lib/*/libjemalloc.so.2; do' \
+ '  [ -f "$path" ] && export LD_PRELOAD="$path" MALLOC_CONF="background_thread:true,dirty_decay_ms:5000,muzzy_decay_ms:5000" && break' \
+ 'done' \
+ 'exec /app/venv/bin/python -m music_assistant_plugin_manager "$@"' \
+ > /usr/local/bin/community-entrypoint.sh && chmod +x /usr/local/bin/community-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/community-entrypoint.sh", "--data-dir", "/data", "--cache-dir", "/data/.cache"]
 ```
+
+The entrypoint script is written by the `RUN` layer: overriding the base image's `ENTRYPOINT` drops the `--data-dir`/`--cache-dir` arguments it passed to `mass`, and without them MA stores its database inside the container and loses every setting on restart.
 
 Note: the MA server image ships only `uv` inside the venv, not `pip`. Use `/app/venv/bin/uv pip install`.
 
@@ -86,7 +97,7 @@ Your module must contain:
 |---|---|---|
 | `manifest.json` | file | MA provider manifest (domain, name, type, …) |
 | `setup` | `async def` | Instantiates and returns the provider |
-| `get_config_entries` | `async def` | Returns a tuple of `ConfigEntry` objects |
+| `setup_flow.py` | module | Optional. Collects one-time setup input (`async def run_setup(session)`) |
 | `SUPPORTED_FEATURES` | `set[ProviderFeature]` | Feature flags the provider advertises |
 
 See [docs/plugin-authors.md](docs/plugin-authors.md) for the full guide, manifest field reference, and a worked example.
@@ -95,7 +106,7 @@ See [docs/plugin-authors.md](docs/plugin-authors.md) for the full guide, manifes
 
 | Example | What it shows |
 |---|---|
-| `examples/demo_provider/` | Minimal scaffold — no real functionality |
+| `examples/demo_provider/` | Minimal scaffold with no real functionality |
 | `examples/radiosoma_provider/` | Full `MusicProvider` subclass: SomaFM internet radio via stdlib XML + aiohttp, `SEARCH` and `BROWSE` features |
 
 ## License
